@@ -4,15 +4,9 @@ Entrypoint for the CLI tool.
 This module serves as the entry point for a command-line interface (CLI) tool.
 It is designed to interact with OpenAI's language models.
 The module provides functionality to:
-- Load necessary environment variables,
-- Configure various parameters for the AI interaction,
-- Manage the generation or improvement of code projects.
 
 Main Functionality
 ------------------
-- Load environment variables required for OpenAI API interaction.
-- Parse user-specified parameters for project configuration and AI behavior.
-- Facilitate interaction with AI models, databases, and archival processes.
 
 Parameters
 ----------
@@ -20,9 +14,6 @@ None
 
 Notes
 -----
-- The `OPENAI_API_KEY` must be set in the environment or provided in a `.env` file within the working directory.
-- The default project path is `projects/example`.
-- When using the `azure_endpoint` parameter, provide the Azure OpenAI service endpoint URL.
 """
 
 import difflib
@@ -62,6 +53,7 @@ from gpt_engineer.core.git import stage_uncommitted_to_git
 from gpt_engineer.core.preprompts_holder import PrepromptsHolder
 from gpt_engineer.core.prompt import Prompt
 from gpt_engineer.tools.custom_steps import clarified_gen, lite_gen, self_heal
+from gpt_engineer.applications.gui.main_window import main as gui_main
 
 app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]}
@@ -378,6 +370,9 @@ def main(
         "--diff_timeout",
         help="Diff regexp timeout. Default: 3. Increase if regexp search timeouts.",
     ),
+    gui_mode: bool = typer.Option(
+        False, "--gui", "-g", help="Launch the graphical user interface"
+    ),
 ):
     """
     The main entry point for the CLI tool that generates or improves a project.
@@ -422,6 +417,8 @@ def main(
         Run setup but to not call LLM or write any code. For testing purposes.
     sysinfo: bool
         Flag indicating whether to output system information for debugging.
+    gui_mode: bool
+        Flag indicating whether to launch the graphical user interface.
 
     Returns
     -------
@@ -454,6 +451,10 @@ def main(
         ), "Clarify and lite mode are not active for improve mode"
 
     load_env_if_needed()
+
+    if gui_mode:
+        gui_main()
+        return
 
     if llm_via_clipboard:
         ai = ClipboardAI()
